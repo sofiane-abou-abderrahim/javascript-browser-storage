@@ -1,32 +1,40 @@
 const storeBtn = document.getElementById('store-btn');
 const retrBtn = document.getElementById('retrieve-btn');
 
-storeBtn.addEventListener('click', () => {
-  const userId = 'u123';
-  const user = {
-    name: 'Max',
-    age: 30
-  };
-  document.cookie = `uid=${userId}; max-age=360`;
-  // document.cookie = `uid=${userId}; expires=`;
-  document.cookie = `user=${JSON.stringify(user)}`;
-});
+// 1. The first step with IndexedDB is that you create a database or open a connection to an existing one.
+const dbRequest = indexedDB.open('StorageDummy', 1); // this is not promise based, instead this "open" method here returns a so-called request
 
-retrBtn.addEventListener('click', () => {
-  console.log(document.cookie);
-  // console.log(document.cookie.split(';')); // extra white space
-  const cookieData = document.cookie.split(';');
-  const data = cookieData.map(i => {
-    return i.trim();
-  });
-  // console.log(data);
-  console.log(data[1].split('=')[1]); // user value
-  // console.log(data.includes().split('=')[1]); // the best way to get data is to search it with the key name
-});
+// 2. Getting access to the database through that event object and configuring it
+dbRequest.onupgradeneeded = function (event) {
+  const db = event.target.result;
+
+  const objStore = db.createObjectStore('products', { keyPath: 'id' });
+
+  objStore.transaction.oncomplete = function (event) {
+    const productStore = db
+      .transaction('products', 'readwrite')
+      .objectStore('products'); // gives direct access to that object store we're trying to establish a connection to
+    productStore.add({
+      id: 'p1', // you need to have your key path here in the object
+      title: 'A First Product',
+      price: 12.99,
+      tags: ['Expensive', 'Luxury']
+    });
+  }; // initializing the object store
+};
 
 /*
 
-The advantages of cookies are that you can set them to expire
-and that you can also send them to a server with requests.
+This is more structured data stored in there without the need to encode it with JSON or anything like that
+and of course you can store multiple such objects with ease here, all identified through their key
 
 */
+
+// 3. Handling errors
+dbRequest.onerror = function (event) {
+  console.log('ERROR!');
+};
+
+storeBtn.addEventListener('click', () => {});
+
+retrBtn.addEventListener('click', () => {});
